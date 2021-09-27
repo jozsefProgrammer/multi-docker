@@ -1,0 +1,24 @@
+language: generic
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t jozsef182/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true jozsef182/react-test npm test 
+
+after_success:
+  - docker build -t jozsef182/multi-client ./client
+  - docker build -t jozsef182/multi-nginx ./nginx
+  - docker build -t jozsef182/multi-server ./server
+  - docker build -t jozsef182/multi-worker ./worker
+  # Hacer login en el docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # tomar esas imagenes y hacer push en docker hub
+  - docker push jozsef182/multi-client
+  - docker push jozsef182/multi-nginx
+  - docker push jozsef182/multi-server
+  - docker push jozsef182/multi-worker
+
